@@ -21,6 +21,7 @@ import javax.xml.bind.Unmarshaller;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
 
 /**
+ * This class is a utility for files which reads, writes, and downloads files
  *
  * @author khosro.makari@gmail.com
  */
@@ -28,14 +29,25 @@ public final class FileUtil {
 
     private static final Logger logger = Logger.getLogger(FileUtil.class.getName());
 
+    // this property should be set to determine the JAXB factory implementation, which is eclipse in this case
     static {
         System.setProperty("javax.xml.bind.context.factory", "org.eclipse.persistence.jaxb.JAXBContextFactory");
     }
 
     private FileUtil() {
-        throw new IllegalArgumentException("Not Allowed to construct!");
+        throw new IllegalArgumentException("Is Not Allowed to construct!");
     }
 
+    /**
+     * reads xml of json file from the given path, and converts it to an object
+     * of the given class
+     *
+     * @param <T> The type of Object that data should be converted
+     * @param classType The type of class for data converting
+     * @param path path of file for reading
+     * @param fileType type of file as Enum
+     * @return the data which is read and converted to classtype
+     */
     public static <T> T readXmlOrJsonFile(Class<T> classType, String path, FileType fileType) {
         try {
             File file = new File(new StringBuilder(Converter.BASE_PATH).append(path).toString());
@@ -45,7 +57,6 @@ public final class FileUtil {
             }
             JAXBContext jaxbc = JAXBContext.newInstance(new Class[]{classType}, properties);
             Unmarshaller unmarshaller = jaxbc.createUnmarshaller();
-//            T type = classType.newInstance();
             try (FileReader fileReader = new FileReader(file);) {
                 T type = (T) unmarshaller.unmarshal(fileReader);
                 return type;
@@ -57,6 +68,13 @@ public final class FileUtil {
 
     }
 
+    /**
+     *
+     * @param <T> The type of Object that data should be marshalled
+     * @param classType The type of class for data marshalling
+     * @param object Type of object for marshalling
+     * @param path path for writing output
+     */
     public static <T> void writeObjectToJsonFile(Class<T> classType, T object, String path) {
         try {
             File file = new File(new StringBuilder(Converter.BASE_PATH).append(path).toString());
@@ -65,7 +83,6 @@ public final class FileUtil {
             properties.put(MarshallerProperties.JSON_ATTRIBUTE_PREFIX, "@");
             JAXBContext jaxbc = JAXBContext.newInstance(new Class[]{classType}, properties);
             Marshaller marshaller = jaxbc.createMarshaller();
-//            T type = classType.newInstance();
             try (FileWriter fileWriter = new FileWriter(file);) {
                 marshaller.marshal(object, fileWriter);
             }
@@ -76,7 +93,13 @@ public final class FileUtil {
 
     }
 
-    public static void uploadImage(String src, String fileName, String path) {
+    /**
+     *
+     * @param src the image source of url to be downloaded
+     * @param fileName name of file as output
+     * @param path relative path that image should be stored there
+     */
+    public static void downloadImage(String src, String fileName, String path) {
         try {
             File dir = new File(new StringBuilder(Converter.BASE_PATH).append("images").append(File.separator).append(path).toString());
             if (!dir.exists()) {

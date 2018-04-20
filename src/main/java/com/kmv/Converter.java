@@ -9,13 +9,19 @@ import java.net.URL;
 
 /**
  *
+ * This class converts and integreates json&xml files into one JSON file, and
+ * will download the images via URLs which have been put inside the files.
+ *
+ * Coah and Giata are two type of data to be read from files and write them back
+ * as one integrated json file
+ *
  * @author khosro.makari@gmail.com
  */
 public class Converter {
 
     public static final String BASE_PATH;
 
-    //The path will be a "data" folder one flolder outer than the project.
+    //The path will be a "data" folder beside the project.
     static {
         URL url = Converter.class.getProtectionDomain().getCodeSource().getLocation();
         String path = url.getFile();
@@ -29,11 +35,16 @@ public class Converter {
 
     public static void main(String[] args) {
         System.out.println("Please wait...");
-        converter();
+        convert();
         System.out.println("Done!");
     }
 
-    public static void converter() {
+    /**
+     * reads data from 6 files of XML and JSON which should be exist in the
+     * folder 'data', then integrates them as one JSON file with the name
+     * 'output.json'
+     */
+    public static void convert() {
         Content content = FileUtil.readXmlOrJsonFile(Content.class, "3956-coah.xml", FileType.XML);
         Content coah2 = FileUtil.readXmlOrJsonFile(Content.class, "162838-coah.xml", FileType.XML);
         Content coah3 = FileUtil.readXmlOrJsonFile(Content.class, "594608-coah.json", FileType.JSON);
@@ -56,18 +67,23 @@ public class Converter {
         FileUtil.writeObjectToJsonFile(Content.class, content, "output.json");
     }
 
+    /**
+     * downloads images of content asynchronously, using Java 8 parallel streams
+     *
+     * @param content the object which contains data along with image URLs
+     */
     private static void uploadContentImages(Content content) {
         content.getHotels().forEach(hotel
                 -> {
             if (hotel.getImages() != null) {
                 hotel.getImages().parallelStream().forEach(image -> {
-                    FileUtil.uploadImage(image.getUrl(), image.getUrl().substring(
+                    FileUtil.downloadImage(image.getUrl(), image.getUrl().substring(
                             image.getUrl().lastIndexOf("=") + 1, image.getUrl().length() - 1), hotel.getGiata_id().toString().concat("-coah"));
                 });
             }
             if (hotel.getGiata() != null && hotel.getGiata().getBildfiles() != null) {
                 hotel.getGiata().getBildfiles().parallelStream().forEach(image -> {
-                    FileUtil.uploadImage(image.getUrl(), image.getId(), hotel.getGiata().getGeoData().getGiataID().toString().concat("-giata"));
+                    FileUtil.downloadImage(image.getUrl(), image.getId(), hotel.getGiata().getGeoData().getGiataID().toString().concat("-giata"));
                 });
             }
         });

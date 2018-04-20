@@ -8,8 +8,12 @@ import org.junit.Test;
  */
 public class ConverterTest {
 
+    /**
+     * If an exception occurs, this test will not pass. Unless, it shows that
+     * everything went right!
+     */
     @Test
     public void converterIntegrationTest_coahFiles_writeResult() {
-        Converter.converter();
+        Converter.convert();
     }
 }
